@@ -1,0 +1,2 @@
+This project was refactored from Firebase Auth/Firestore to Postgres + JWT.
+Legacy Firebase-related files may remain in the repo but are not used by the server entrypoint.

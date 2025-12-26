@@ -1,0 +1,12 @@
+{
+  "name": "bonview-church-sms-monorepo",
+  "private": true,
+  "type": "commonjs",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "start": "node backend/src/index.js",
+    "migrate": "node backend/scripts/migrate.js"
+  }
+}
