@@ -16,6 +16,9 @@ export default function History() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
 
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 15;
+
   const filteredLogs = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return logs;
@@ -34,6 +37,17 @@ export default function History() {
       );
     });
   }, [logs, search]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredLogs.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, pageCount - 1);
+  const pagedLogs = useMemo(() => {
+    const start = clampedPage * PAGE_SIZE;
+    return filteredLogs.slice(start, start + PAGE_SIZE);
+  }, [filteredLogs, clampedPage]);
 
   async function load() {
     setLoading(true);
@@ -90,7 +104,7 @@ export default function History() {
               </tr>
             </thead>
             <tbody>
-              {filteredLogs.map((l) => (
+              {pagedLogs.map((l) => (
                 <tr key={l.id}>
                   <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(l.createdAt)}</td>
                   <td>
@@ -105,6 +119,31 @@ export default function History() {
               ))}
             </tbody>
           </table>
+
+          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+              Showing {filteredLogs.length === 0 ? 0 : clampedPage * PAGE_SIZE + 1}–
+              {Math.min(filteredLogs.length, (clampedPage + 1) * PAGE_SIZE)} of {filteredLogs.length}
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                className="button secondary"
+                type="button"
+                disabled={clampedPage <= 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+              >
+                Previous
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                disabled={clampedPage >= pageCount - 1}
+                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

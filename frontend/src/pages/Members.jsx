@@ -23,6 +23,9 @@ export default function Members() {
   const [search, setSearch] = useState('');
   const [rowBusyId, setRowBusyId] = useState(null);
 
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 15;
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -45,6 +48,17 @@ export default function Members() {
       return name.includes(q) || phone.includes(q) || status.includes(q);
     });
   }, [members, search]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredMembers.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, pageCount - 1);
+  const pagedMembers = useMemo(() => {
+    const start = clampedPage * PAGE_SIZE;
+    return filteredMembers.slice(start, start + PAGE_SIZE);
+  }, [filteredMembers, clampedPage]);
 
   async function refresh() {
     setLoading(true);
@@ -209,7 +223,7 @@ export default function Members() {
                 </tr>
               </thead>
               <tbody>
-                {filteredMembers.map((m) => (
+                {pagedMembers.map((m) => (
                   <tr key={m.id}>
                     <td>{m.name}</td>
                     <td>{m.phoneE164}</td>
@@ -275,6 +289,31 @@ export default function Members() {
                 ))}
               </tbody>
             </table>
+
+            <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+                Showing {filteredMembers.length === 0 ? 0 : clampedPage * PAGE_SIZE + 1}–
+                {Math.min(filteredMembers.length, (clampedPage + 1) * PAGE_SIZE)} of {filteredMembers.length}
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <button
+                  className="button secondary"
+                  type="button"
+                  disabled={clampedPage <= 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  Previous
+                </button>
+                <button
+                  className="button secondary"
+                  type="button"
+                  disabled={clampedPage >= pageCount - 1}
+                  onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

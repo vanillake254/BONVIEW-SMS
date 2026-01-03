@@ -20,6 +20,9 @@ export default function SendMessage() {
 
   const [memberSearch, setMemberSearch] = useState('');
 
+  const [memberPage, setMemberPage] = useState(0);
+  const PAGE_SIZE = 15;
+
   const subscribedMembers = useMemo(
     () => members.filter((m) => m.status === 'subscribed'),
     [members]
@@ -34,6 +37,17 @@ export default function SendMessage() {
       return name.includes(q) || phone.includes(q);
     });
   }, [subscribedMembers, memberSearch]);
+
+  useEffect(() => {
+    setMemberPage(0);
+  }, [memberSearch, audience]);
+
+  const memberPageCount = Math.max(1, Math.ceil(filteredSubscribedMembers.length / PAGE_SIZE));
+  const clampedMemberPage = Math.min(memberPage, memberPageCount - 1);
+  const pagedSubscribedMembers = useMemo(() => {
+    const start = clampedMemberPage * PAGE_SIZE;
+    return filteredSubscribedMembers.slice(start, start + PAGE_SIZE);
+  }, [filteredSubscribedMembers, clampedMemberPage]);
 
   const selectedIds = useMemo(() => Array.from(selected), [selected]);
 
@@ -194,7 +208,7 @@ export default function SendMessage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredSubscribedMembers.map((m) => (
+                {pagedSubscribedMembers.map((m) => (
                   <tr key={m.id}>
                     {audience === 'selected' ? (
                       <td>
@@ -216,6 +230,31 @@ export default function SendMessage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+              Showing {filteredSubscribedMembers.length === 0 ? 0 : clampedMemberPage * PAGE_SIZE + 1}–
+              {Math.min(filteredSubscribedMembers.length, (clampedMemberPage + 1) * PAGE_SIZE)} of {filteredSubscribedMembers.length}
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <button
+                className="button secondary"
+                type="button"
+                disabled={clampedMemberPage <= 0}
+                onClick={() => setMemberPage((p) => Math.max(0, p - 1))}
+              >
+                Previous
+              </button>
+              <button
+                className="button secondary"
+                type="button"
+                disabled={clampedMemberPage >= memberPageCount - 1}
+                onClick={() => setMemberPage((p) => Math.min(memberPageCount - 1, p + 1))}
+              >
+                Next
+              </button>
+            </div>
           </div>
           </>
         )}
